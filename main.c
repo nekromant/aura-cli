@@ -132,6 +132,7 @@ static void do_listen_for_events(struct aura_node *n)
 static void do_call_method(struct aura_node *n, const char *name, int argc, char *argv[])
 {
 	struct aura_buffer *retbuf;
+	aura_wait_status(n, AURA_STATUS_ONLINE);
 	struct aura_object *o = aura_etable_find(n->tbl, name);
 	if (!o) { 
 		slog(0, SLOG_ERROR, "Attempt to call some unknown method");

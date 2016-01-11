@@ -65,30 +65,30 @@ static void dump_retbuf(const char *fmt, struct aura_buffer *buf)
 		}
 		case URPC_U32: {
 			uint32_t a = aura_buffer_get_u32(buf);
-			printf(" %u ", a);
+			printf(" %" PRIu32 " ", a);
 			break;
 		}
 
  		case URPC_S32: {
 			int32_t a = aura_buffer_get_s32(buf);
-			printf(" %d ", a);
+			printf(" %" PRIi32 " ", a);
 			break;
 		}
 
 		case URPC_U64: {
 			uint64_t a = aura_buffer_get_u64(buf);
-			printf(" %lu ", a);
+			printf(" %" PRIu64 " ", a);
 			break;
 		}
 			
  		case URPC_S64: {
 			int64_t a = aura_buffer_get_s64(buf);
-			printf(" %ld ", a);
+			printf(" %" PRIi64" ", a);
 			break;
 		}
 
 		case URPC_BUF:
-			printf( " buf(0x%lx) ", aura_buffer_get_u64(buf));
+			printf( " buf(0x%" PRIu64 ") ", aura_buffer_get_u64(buf));
 			// TODO: Printout buffer here
 			break;
 

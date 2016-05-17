@@ -3,7 +3,7 @@
 #include <aura/private.h>
 #include <inttypes.h>
 
-enum opcode { 
+enum opcode {
 	OP_NONE,
 	OP_LISTEN,
 	OP_CALL,
@@ -26,7 +26,7 @@ static struct option long_options[] =
 	{0, 0, 0, 0}
 };
 
-void usage(char *self) { 
+void usage(char *self) {
 	printf("AURA Commandline Tool. (c) Necromant 2015\n");
 	printf("Usage: \n");
 	printf("       %s -v|--version\n", self);
@@ -42,7 +42,7 @@ static void dump_retbuf(const char *fmt, struct aura_buffer *buf)
 		return;
 
 	while (*fmt) {
-		switch (*fmt++) { 
+		switch (*fmt++) {
 		case URPC_U8: {
 			uint8_t a = aura_buffer_get_u8(buf);
 			printf(" %u ", a);
@@ -80,7 +80,7 @@ static void dump_retbuf(const char *fmt, struct aura_buffer *buf)
 			printf(" %" PRIu64 " ", a);
 			break;
 		}
-			
+
  		case URPC_S64: {
 			int64_t a = aura_buffer_get_s64(buf);
 			printf(" %" PRIi64" ", a);
@@ -94,7 +94,7 @@ static void dump_retbuf(const char *fmt, struct aura_buffer *buf)
 
 		case URPC_BIN: {
 			int tmp = atoi(fmt);
-			if (tmp == 0) 
+			if (tmp == 0)
 				BUG(NULL, "Internal serilizer bug processing: %s", fmt);
 			while (*fmt && (*fmt++ != '.'));
 			printf(" bin(%d) ", tmp);
@@ -102,7 +102,7 @@ static void dump_retbuf(const char *fmt, struct aura_buffer *buf)
 		}
 
 		default:
-			BUG(NULL, "Serializer failed at token: %s", fmt); 
+			BUG(NULL, "Serializer failed at token: %s", fmt);
 		}
 	}
 }
@@ -111,14 +111,14 @@ static void dump_retbuf(const char *fmt, struct aura_buffer *buf)
 
 static void do_listen_for_events(struct aura_node *n)
 {
-	const struct aura_object *o; 
+	const struct aura_object *o;
 	struct aura_buffer *buf;
-	int ret; 
+	int ret;
 
-	aura_enable_sync_events(n, 10); 
+	aura_enable_sync_events(n, 10);
 
-	while (1) { 		
-		ret = aura_get_next_event(n, &o, &buf); 
+	while (1) {
+		ret = aura_get_next_event(n, &o, &buf);
 		if (ret != 0)
 			BUG(n, "Failed to read next event");
 		printf("event: %s | ", o->name);
@@ -134,14 +134,16 @@ static void do_call_method(struct aura_node *n, const char *name, int argc, char
 	struct aura_buffer *retbuf;
 	aura_wait_status(n, AURA_STATUS_ONLINE);
 	struct aura_object *o = aura_etable_find(n->tbl, name);
-	if (!o) { 
+	if (!o) {
 		slog(0, SLOG_ERROR, "Attempt to call some unknown method");
+		return;
 	}
-	struct aura_buffer *buf = aura_buffer_request(n, o->arglen);	
-	if (!buf) { 
+	struct aura_buffer *buf = aura_buffer_request(n, o->arglen);
+	if (!buf) {
 		slog(0, SLOG_ERROR, "Memory allocation failed");
+		return;
 	}
-	
+
 	const char *fmt = o->arg_fmt;
 	int i = 0;
 
@@ -149,7 +151,7 @@ static void do_call_method(struct aura_node *n, const char *name, int argc, char
 		return;
 
 	while (*fmt && (i < argc)) {
-		switch (*fmt++) { 
+		switch (*fmt++) {
 		case URPC_U8: {
 			int a = atoi(argv[i]);
 			aura_buffer_put_u8(buf, a);
@@ -187,7 +189,7 @@ static void do_call_method(struct aura_node *n, const char *name, int argc, char
 			aura_buffer_put_u64(buf, a);
 			break;
 		}
-			
+
  		case URPC_S64: {
 			uint64_t a = atoll(argv[i]);
 			aura_buffer_put_s64(buf, a);
@@ -200,10 +202,10 @@ static void do_call_method(struct aura_node *n, const char *name, int argc, char
 
 		case URPC_BIN: {
 			int tmp = atoi(fmt);
-			if (tmp == 0) 
+			if (tmp == 0)
 				BUG(NULL, "Internal serilizer bug processing: %s", fmt);
 			while (*fmt && (*fmt++ != '.'));
-			aura_buffer_put_bin(buf, argv[i], 
+			aura_buffer_put_bin(buf, argv[i],
 					    tmp < strlen(argv[i]) ? tmp : strlen(argv[i]));
 			buf->pos+=tmp - strlen(argv[i]);
 			//FixMe: Hack...
@@ -211,13 +213,13 @@ static void do_call_method(struct aura_node *n, const char *name, int argc, char
 		}
 
 		default:
-			BUG(NULL, "Serializer failed at token: %s", fmt); 
+			BUG(NULL, "Serializer failed at token: %s", fmt);
 		}
 		i++;
 	}
-	
+
 	int ret = aura_core_call(n, o, &retbuf, buf);
-	if (ret != 0) { 
+	if (ret != 0) {
 		slog(0, SLOG_ERROR, "Call of %s failed with %d", o->name, ret);
 		exit(0);
 	}
@@ -226,13 +228,13 @@ static void do_call_method(struct aura_node *n, const char *name, int argc, char
 	printf("\n");
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
 	slog_init(NULL, 0);
 
 	int option_index = 0;
 
-	const char *name  = NULL; 
+	const char *name  = NULL;
 	const char *tname = NULL;
 	const char *topts = NULL;
 
@@ -241,7 +243,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	while (1) { 
+	while (1) {
 		int c = getopt_long (argc, argv, "Llvt:c:z:o:",
 				     long_options, &option_index);
 
@@ -261,7 +263,7 @@ int main(int argc, char *argv[])
 
 		case 'v':
 			printf("AURA Commandline Tool. (c) Necromant 2015\n");
-			printf("libaura version %s (numeric %u)\n", 
+			printf("libaura version %s (numeric %u)\n",
 			       aura_get_version(), aura_get_version_code());
 			exit(0);
 			break;
@@ -288,13 +290,13 @@ int main(int argc, char *argv[])
 			printf("Captain Obvious to the rescue: Run %s --help to get help\n", argv[0]);
 			abort ();
 		}
-		
+
 		if (c == -1)
 			break;
 
 	}
-	
-	if (!tname) { 
+
+	if (!tname) {
 		printf("Can't do anything without a transport name\n");
 		printf("Captain Obvious to the rescue: Run %s --help to get help\n", argv[0]);
 		exit(1);
@@ -302,10 +304,10 @@ int main(int argc, char *argv[])
 
 
 	struct aura_node *n = aura_open(tname, topts);
-	if (!n) 
+	if (!n)
 		exit(1);
 
-	switch (op) { 
+	switch (op) {
 	case OP_LISTEN:
 		do_listen_for_events(n);
 		break;
@@ -316,5 +318,3 @@ int main(int argc, char *argv[])
 	aura_close(n);
 	return 0;
 }
-
-
